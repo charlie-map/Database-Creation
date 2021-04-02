@@ -4,7 +4,7 @@
 To run, run "node btree.js ____________  _________  __________"
   
   For value one:
-Currently: either "search", or "insert"
+Currently: either "search", "insert", "delete"
 
   For value two:
 Curently: just a single number (which represents the key)
