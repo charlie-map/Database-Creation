@@ -154,6 +154,29 @@ insert(btree, 15, 30);
 
 console.log(JSON.stringify(btree));
 
+function update(b_tree, key, value) {
+	let key_pos = -1;
+	for (let bkey = 0; bkey < b_tree.key.length; bkey++) { // See if there's a key within the tree that matches the key
+		if (key == b_tree.key[bkey]) { // When key_pos != -1, we need to remove something
+			key_pos = bkey;
+			break;
+		} else if (key > b_tree.key[bkey]) {
+			key_pos = bkey + 1;
+		}
+		key_pos = b_tree.key.length - 1 == bkey && key_pos == -1 ? 0 : key_pos;
+	}
+	if (b_tree.key[key_pos] != key) {
+		if (b_tree.children[key_pos]) update(b_tree.children[key_pos], key, value);
+		return "No value to update";
+	}
+	b_tree.payload[key_pos] = value;
+	return;
+}
+
+update(btree, 15, 10000);
+
+console.log("\n", JSON.stringify(btree));
+
 if (process.argv[2] == "search") console.log(search(btree, process.argv[3]));
 if (process.argv[2] == "insert") {
 	insert(btree, parseInt(process.argv[3], 10), process.argv[4], 0);
@@ -260,7 +283,7 @@ function deletion(b_tree, key, depth, grand_father) {
 
 deletion(btree, 15);
 console.log("\nCURRENT", JSON.stringify(btree), "\n");
-// deletion(btree, 4);
-// console.log("\n", JSON.stringify(btree), "\n");
-// deletion(btree, 7);
-// console.log("\nFINAL", JSON.stringify(btree));
+deletion(btree, 12);
+console.log("\n", JSON.stringify(btree), "\n");
+deletion(btree, 8);
+console.log("\nFINAL", JSON.stringify(btree));
