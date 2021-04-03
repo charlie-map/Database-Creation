@@ -26,11 +26,9 @@ function find_parent_object(b_tree, key, compare_level, level) {
 
 function quicksort(array, payload, low, high) {
 	if (low < high) {
-		let return_values = partition(array, payload, low, high);
-		array = return_values[0];
-		payload = return_values[1];
-		quicksort(array, payload, low, return_values[2] - 1); // low side
-		quicksort(array, payload, return_values[2] + 1, high); // high side
+		let pivot = partition(array, payload, low, high);
+		quicksort(array, payload, low, pivot - 1); // low side
+		quicksort(array, payload, pivot + 1, high); // high side
 	}
 	return [array, payload];
 }
@@ -57,34 +55,72 @@ function partition(array, payload, startlow, pivot) {
 	buffer = payload[lowest + 1];
 	payload[lowest + 1] = payload[pivot];
 	payload[pivot] = buffer;
-	return [array, payload, lowest + 1];
+	return lowest + 1;
 }
 
-// btree.key[0] = 3;
-// btree.key[1] = 5;
+function split_node(b_tree) {
+	let parent_pos = Math.floor(m / 2);
+	let parent_key = b_tree.key[parent_pos];
+	let parent_payload = b_tree.payload[parent_pos];
+	let left_keys = b_tree.key.splice(0, parent_pos);
+	let left_payloads = b_tree.payload.splice(0, parent_pos);
+	let left_children = b_tree.children.splice(0, parent_pos + 1);
+	let right_keys = b_tree.key.splice(parent_pos, m - (parent_pos - 1));
+	let right_payloads = b_tree.payload.splice(parent_pos, m - (parent_pos - 1));
+	let right_children = b_tree.children.splice(parent_pos - 1, m - (parent_pos - 1));
+	b_tree.key = [parent_key];
+	b_tree.payload = [parent_payload];
+	b_tree.children[0] = {
+		key: left_keys,
+		payload: left_payloads,
+		children: left_children
+	};
+	b_tree.children[1] = {
+		key: right_keys,
+		payload: right_payloads,
+		children: right_children
+	};
+	return;
+}
 
 function insert(b_tree, key, value, depth) {
 	depth = !depth ? 0 : depth;
 	let key_pos = 0;
+	let combine_compare = false; // Knowing if there is a need to combine the child up in the parent
 	for (let run_through = 0; run_through < b_tree.key.length; run_through++) {
 		if (key > b_tree.key[run_through]) key_pos++;
 	}
-	if (b_tree.children[key_pos]) {
-		insert(b_tree.children[key_pos], key, value, depth + 1);
+	if (b_tree.children && b_tree.children[key_pos]) {
+		combine_compare = insert(b_tree.children[key_pos], key, value, depth + 1);
 	} else {
 		// insert here and start fixing the tree upward
 		b_tree.key.push(key);
 		b_tree.payload.push(value);
 		quicksort(b_tree.key, b_tree.payload, 0, b_tree.key.length - 1);
-		if (depth != 0) return;
-		// need to do a custom check for this level
 		if (b_tree.key.length == m) {
-			let split_point = Math.floor(m / 2);
-			
+			split_node(b_tree);
+			return true;
 		}
-		return;
 	}
-	return;
+	if (!combine_compare) return false;
+	// Pull up the child into the parent
+	b_tree.key.push(b_tree.children[key_pos].key[0]);
+	b_tree.payload.push(b_tree.children[key_pos].payload[0]);
+	quicksort(b_tree.key, b_tree.payload, 0, b_tree.key.length - 1);
+	let right_children = b_tree.children[key_pos].children[1];
+	b_tree.children[key_pos] = b_tree.children[key_pos].children[0];
+	while (b_tree.children[key_pos + 1]) {
+		let buffer = b_tree.children[key_pos + 1];
+		b_tree.children[key_pos + 1] = right_children;
+		right_children = buffer;
+		key_pos++;
+	}
+	b_tree.children[key_pos + 1] = right_children;
+	if (b_tree.key.length == m) {
+		split_node(b_tree);
+		return true;
+	}
+	return false;
 }
 
 function search(b_tree, key) {
@@ -98,13 +134,23 @@ function search(b_tree, key) {
 }
 
 //insert(btree, 0, 816);
+insert(btree, 5, 30);
+insert(btree, 6, 4000);
+insert(btree, 7, 21);
 insert(btree, 1, 420);
 insert(btree, 2, 360);
 insert(btree, 3, 69);
-//insert(btree, 4, 816);
-//insert(btree, 5, 30);
-//insert(btree, 6, 4000);
-//insert(btree, 7, 21);
+insert(btree, 4, 816);
+insert(btree, 8, 30);
+insert(btree, 9, 4000);
+insert(btree, 10, 21);
+insert(btree, 11, 420);
+insert(btree, 12, 360);
+insert(btree, 13, 69);
+insert(btree, 14, 816);
+insert(btree, 15, 30);
+// insert(btree, 6, 4000);
+// insert(btree, 7, 21);
 
 console.log(JSON.stringify(btree));
 
@@ -212,8 +258,8 @@ function deletion(b_tree, key, depth, grand_father) {
 	return return_value;
 }
 
-// deletion(btree, 15);
-// console.log("\nCURRENT", JSON.stringify(btree), "\n");
+deletion(btree, 15);
+console.log("\nCURRENT", JSON.stringify(btree), "\n");
 // deletion(btree, 4);
 // console.log("\n", JSON.stringify(btree), "\n");
 // deletion(btree, 7);
