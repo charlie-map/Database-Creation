@@ -249,8 +249,8 @@ function deletion(b_tree, key, depth, grand_father) {
 	}
 	if ((!b_tree.key.length && depth == 0) || (grand_father && b_tree.children[0].key[key_pos] == key)) {
 		if (return_value[0] == "No value under the specified key") return return_value[0];
-		b_tree.children[0].key[key_pos] = (return_value[0] && return_value[1]) ? return_value[0] : b_tree.children[0].key[key_pos];
-		b_tree.children[0].payload[key_pos] = (return_value[0] && return_value[1]) ? return_value[1] : b_tree.children[0].payload[key_pos];
+		b_tree.children[0].key[key_pos] = (grand_father && return_value[0] && return_value[1]) ? return_value[0] : b_tree.children[0].key[key_pos];
+		b_tree.children[0].payload[key_pos] = (grand_father && return_value[0] && return_value[1]) ? return_value[1] : b_tree.children[0].payload[key_pos];
 		b_tree.key = b_tree.children[0].key;
 		b_tree.payload = b_tree.children[0].payload;
 		b_tree.children = b_tree.children[0].children;
