@@ -195,12 +195,9 @@ function deletion(b_tree, key, depth, grand_father) {
 	if (key_pos == b_tree.key.length) key_pos--;
 	// Need to fix issues with the tree
 	// Look at the children, check the cases
-	if (b_tree.children[key_pos].key.length && b_tree.children[key_pos + 1] && b_tree.children[key_pos + 1].key.length && !grand_father) return return_value; // nothing needs changing
-	// Make two variables so swapping can be generalized
-	// look on both sides of our current node
 	let full_node = b_tree.children[key_pos].key.length ? key_pos : key_pos + 1;
 	let empty_node = b_tree.children[key_pos].key.length ? key_pos + 1 : key_pos;
-	if (return_value[0] && return_value[1]) {
+	if (return_value[0] && return_value[1] && return_value.length == 2) {
 		if (b_tree.key[key_pos] == key) {
 			b_tree.key[key_pos] = return_value[0];
 			b_tree.payload[key_pos] = return_value[1];
@@ -209,6 +206,9 @@ function deletion(b_tree, key, depth, grand_father) {
 			b_tree.children[0].payload[key_pos] = return_value[1];
 		}
 	}
+	full_node = !b_tree.children[full_node] && full_node > key_pos && key_pos > 0 ? key_pos - 1 : full_node;
+	empty_node = !b_tree.children[empty_node] && empty_node > key_pos && key_pos > 0 ? key_pos - 1 : empty_node;
+	// look on both sides of our current node
 	if ((b_tree.children[empty_node].key.length > 1 && !b_tree.children[full_node].key.length) ||
 		(!b_tree.children[empty_node].key.length && b_tree.children[full_node].key.length > 1)) { // parent moves to empty, inner value of other node comes up
 		b_tree.children[empty_node].key = [b_tree.key[key_pos]];
@@ -217,6 +217,7 @@ function deletion(b_tree, key, depth, grand_father) {
 			[b_tree.children[full_node].key[b_tree.children[full_node].key.length - 1], b_tree.children[full_node].payload[b_tree.children[full_node].payload.length - 1],
 				b_tree.children[full_node].children[b_tree.children[full_node].payload.length - 1]
 			];
+			console.log(inner_most_node);
 		if (full_node > key_pos) {
 			b_tree.key[key_pos] = inner_most_node[0];
 			b_tree.payload[key_pos] = inner_most_node[1];
@@ -227,7 +228,7 @@ function deletion(b_tree, key, depth, grand_father) {
 		} else {
 			b_tree.key[key_pos] = inner_most_node[0];
 			b_tree.payload[key_pos] = inner_most_node[1];
-			if (inner_most_node[2]) b_tree.children[key_pos].children = inner_most_node[2].concat(b_tree.children[key_pos]);
+			if (inner_most_node[2]) b_tree.children[key_pos].children = [inner_most_node[2]].concat(b_tree.children[key_pos]);
 			b_tree.children[full_node].key.splice(b_tree.children[full_node].key.length - 1, 1);
 			b_tree.children[full_node].payload.splice(b_tree.children[full_node].payload.length - 1, 1);
 			b_tree.children[full_node].children.splice(b_tree.children[full_node].payload.length - 1, 1);
