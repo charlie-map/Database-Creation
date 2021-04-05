@@ -133,27 +133,6 @@ function search(b_tree, key) {
 	return "No value found";
 }
 
-//insert(btree, 0, 816);
-insert(btree, 5, 30);
-insert(btree, 6, 4000);
-insert(btree, 7, 21);
-insert(btree, 1, 420);
-insert(btree, 2, 360);
-insert(btree, 3, 69);
-insert(btree, 4, 816);
-insert(btree, 8, 30);
-insert(btree, 9, 4000);
-insert(btree, 10, 21);
-insert(btree, 11, 420);
-insert(btree, 12, 360);
-insert(btree, 13, 69);
-insert(btree, 14, 816);
-insert(btree, 15, 30);
-// insert(btree, 6, 4000);
-// insert(btree, 7, 21);
-
-console.log(JSON.stringify(btree));
-
 function update(b_tree, key, value) {
 	let key_pos = -1;
 	for (let bkey = 0; bkey < b_tree.key.length; bkey++) { // See if there's a key within the tree that matches the key
@@ -173,16 +152,6 @@ function update(b_tree, key, value) {
 	return;
 }
 
-//update(btree, 15, 10000);
-
-//console.log("\n", JSON.stringify(btree));
-
-if (process.argv[2] == "search") console.log(search(btree, process.argv[3]));
-if (process.argv[2] == "insert") {
-	insert(btree, parseInt(process.argv[3], 10), process.argv[4], 0);
-	console.log(JSON.stringify(btree));
-}
-
 function deletion(b_tree, key, depth, grand_father) {
 	depth = !depth ? 0 : depth;
 	let return_value;
@@ -198,7 +167,7 @@ function deletion(b_tree, key, depth, grand_father) {
 		key_pos = b_tree.key.length - 1 == bkey && key_pos == -1 ? 0 : key_pos;
 	}
 	if (b_tree.key[key_pos] != looking_at_key || (b_tree.children[key_pos] && b_tree.children[key_pos].children.length)) {
-		if (b_tree.children.length == 0) {
+		if (b_tree.children.length == 0 || !b_tree.children[key_pos]) {
 			if (b_tree.key[key_pos] == key) {
 				b_tree.key.splice(key_pos, 1);
 				b_tree.payload.splice(key_pos, 1);
@@ -206,7 +175,7 @@ function deletion(b_tree, key, depth, grand_father) {
 			}
 			return "No value under the specified key";
 		}
-		if (b_tree.children[key_pos].children.length && b_tree.key[key_pos] == key) {
+		if (b_tree.children[key_pos] && b_tree.children[key_pos].children.length && b_tree.key[key_pos] == key) {
 			grand_father = key - 1;
 		}
 		return_value = deletion(b_tree.children[key_pos], key, depth + 1, grand_father);
@@ -223,18 +192,15 @@ function deletion(b_tree, key, depth, grand_father) {
 			return [key_value, payload_value];
 		}
 	}
-	console.log("\nRUNNING THROUGH DEPTH", b_tree, b_tree.children, depth, "and key pos", key_pos);
 	if (key_pos == b_tree.key.length) key_pos--;
 	// Need to fix issues with the tree
 	// Look at the children, check the cases
-	if (b_tree.children[key_pos].key.length && b_tree.children[key_pos + 1].key.length && !grand_father) return return_value; // nothing needs changing
+	if (b_tree.children[key_pos].key.length && b_tree.children[key_pos + 1] && b_tree.children[key_pos + 1].key.length && !grand_father) return return_value; // nothing needs changing
 	// Make two variables so swapping can be generalized
 	// look on both sides of our current node
 	let full_node = b_tree.children[key_pos].key.length ? key_pos : key_pos + 1;
 	let empty_node = b_tree.children[key_pos].key.length ? key_pos + 1 : key_pos;
-	console.log("check values", return_value, b_tree.key, key_pos, key, "\n");
 	if (return_value[0] && return_value[1]) {
-		console.log("found");
 		if (b_tree.key[key_pos] == key) {
 			b_tree.key[key_pos] = return_value[0];
 			b_tree.payload[key_pos] = return_value[1];
@@ -245,33 +211,35 @@ function deletion(b_tree, key, depth, grand_father) {
 	}
 	if ((b_tree.children[empty_node].key.length > 1 && !b_tree.children[full_node].key.length) ||
 		(!b_tree.children[empty_node].key.length && b_tree.children[full_node].key.length > 1)) { // parent moves to empty, inner value of other node comes up
-		console.log("found path: too many children\n");
 		b_tree.children[empty_node].key = [b_tree.key[key_pos]];
 		b_tree.children[empty_node].payload = [b_tree.payload[key_pos]];
-		let inner_most_node = full_node > key_pos ? [b_tree.children[full_node].key[0], b_tree.children[full_node].payload[0]] :
-			[b_tree.children[full_node].key[b_tree.children[full_node].key.length - 1], b_tree.children[full_node].payload[b_tree.children[full_node].payload.length - 1]]
+		let inner_most_node = full_node > key_pos ? [b_tree.children[full_node].key[0], b_tree.children[full_node].payload[0], b_tree.children[full_node].children[0]] :
+			[b_tree.children[full_node].key[b_tree.children[full_node].key.length - 1], b_tree.children[full_node].payload[b_tree.children[full_node].payload.length - 1],
+				b_tree.children[full_node].children[b_tree.children[full_node].payload.length - 1]
+			];
 		if (full_node > key_pos) {
 			b_tree.key[key_pos] = inner_most_node[0];
 			b_tree.payload[key_pos] = inner_most_node[1];
+			if (inner_most_node[2]) b_tree.children[key_pos].children.push(inner_most_node[2]);
 			b_tree.children[full_node].key.splice(0, 1);
 			b_tree.children[full_node].payload.splice(0, 1);
+			b_tree.children[full_node].children.splice(0, 1);
 		} else {
 			b_tree.key[key_pos] = inner_most_node[0];
 			b_tree.payload[key_pos] = inner_most_node[1];
+			if (inner_most_node[2]) b_tree.children[key_pos].children = inner_most_node[2].concat(b_tree.children[key_pos]);
 			b_tree.children[full_node].key.splice(b_tree.children[full_node].key.length - 1, 1);
 			b_tree.children[full_node].payload.splice(b_tree.children[full_node].payload.length - 1, 1);
+			b_tree.children[full_node].children.splice(b_tree.children[full_node].payload.length - 1, 1);
 		}
 	}
 	if (!b_tree.children[empty_node].key.length || !b_tree.children[full_node].key.length) { // one is empty, the other child has one: combine parent with that child
-		console.log("foind path: empty\n", b_tree.key, key_pos, full_node, "and empty node", empty_node);
 		// Big note: watch out for the empty one having a child
 		let parent_key = b_tree.key.splice(key_pos, 1)[0];
 		let parent_payload = b_tree.payload.splice(key_pos, 1)[0];
-		console.log("parent values", parent_key, parent_payload, b_tree.key);
 		b_tree.children[full_node].key.push(parent_key);
 		b_tree.children[full_node].payload.push(parent_payload);
 		quicksort(b_tree.children[full_node].key, b_tree.children[full_node].payload, 0, b_tree.children[full_node].key.length - 1);
-		console.log("\ncurrent trajectory", b_tree, b_tree.children, "empty node", empty_node, "\n");
 		// Check the empty for having a child
 		if (b_tree.children[empty_node].children.length) {
 			if (full_node > key_pos) {
@@ -282,7 +250,6 @@ function deletion(b_tree, key, depth, grand_father) {
 		}
 		b_tree.children.splice(empty_node, 1);
 	}
-	console.log("\nTREE AFTERWARD", b_tree, b_tree.children, "\n");
 	if (!b_tree.key.length && depth == 0) {
 		if (return_value[0] == "No value under the specified key") return return_value[0];
 		b_tree.key = b_tree.children[0].key;
@@ -292,17 +259,8 @@ function deletion(b_tree, key, depth, grand_father) {
 	return return_value;
 }
 
-deletion(btree, 4);
-console.log("\nCURRENT", JSON.stringify(btree), "\n");
-deletion(btree, 8);
-console.log("\n", JSON.stringify(btree), "\n");
-deletion(btree, 12);
-console.log("\n", JSON.stringify(btree), "\n");
-deletion(btree, 12);
-console.log("\n", JSON.stringify(btree), "\n");
-deletion(btree, 14);
-console.log("\n", JSON.stringify(btree), "\n");
-deletion(btree, 1);
-console.log("\n", JSON.stringify(btree), "\n");
-deletion(btree, 15);
-console.log("\nFINAL", JSON.stringify(btree));
+module.exports = {
+	btree,
+	insert,
+	deletion
+}
