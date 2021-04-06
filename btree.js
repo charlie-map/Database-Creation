@@ -182,6 +182,21 @@ function deletion(b_tree, key, depth, gparent) {
 		let key = b_tree.key.splice(kill_pos, 1)[0];
 		let pay = b_tree.payload.splice(kill_pos, 1)[0];
 		if (gparent && !b_tree.children[key_pos]) return [key, pay];
+		// special case: deleting, and there's too many children
+		// ^: combine if their numbers are correct
+		let filled_pos = b_tree.children[key_pos + 1] && b_tree.children[key_pos + 1].key.length == 1 ? key_pos + 1 : -1;
+		if (filled_pos == -1) filled_pos = b_tree.children[key_pos - 1] && 
+			b_tree.children[key_pos - 1].key.length == 1 ? key_pos - 1 : -1;
+		if (b_tree.key.length < b_tree.children.length - 1 && b_tree.children[kill_pos].key.length == 1 && 
+			filled_pos != -1 && b_tree.children[filled_pos].key.length) {
+			// combine the key_pos child and filled_pos child
+			let filled_key = b_tree.children[filled_pos].key.splice(0, 1)[0];
+			let filled_load = b_tree.children[filled_pos].payload.splice(0, 1)[0];
+			b_tree.children.splice(filled_load, 1);
+			b_tree.children[key_pos].key.push(filled_key);
+			b_tree.children[key_pos].payload.push(filled_load);
+			quicksort(b_tree.children[key_pos].key, b_tree.children[key_pos].payload, 0, b_tree.children[key_pos].key.length - 1);
+		}
 		return;
 	} else { // keep searching
 		if (!b_tree.children[key_pos]) return 0;
@@ -196,7 +211,6 @@ function deletion(b_tree, key, depth, gparent) {
 		}
 	}
 	if (full_children) return new_values;
-	console.log("\nfull tree", b_tree, b_tree.children, "\n");
 	// make a full node and empty node variable to keep track
 	let full_node = b_tree.children[key_pos].key.length ? key_pos : key_pos + 1;
 	let empty_node = !b_tree.children[key_pos].key.length ? key_pos : key_pos + 1;
@@ -214,8 +228,8 @@ function deletion(b_tree, key, depth, gparent) {
 			b_tree.children[full_node].key.splice(b_tree.children[full_node].key.length - 1, 1)[0];
 		b_tree.payload[empty_node] = full_node > key_pos ? b_tree.children[full_node].payload.splice(0, 1)[0] :
 			b_tree.children[full_node].payload.splice(b_tree.children[full_node].payload.length - 1, 1)[0];
-		b_tree.children[empty_node].key = parent_key;
-		b_tree.children[empty_node].payload = parent_load;
+		b_tree.children[empty_node].key = [parent_key];
+		b_tree.children[empty_node].payload = [parent_load];
 
 	} else if (b_tree.children[full_node].key.length == 1) {
 		// second case: one is empty, other has one
