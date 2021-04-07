@@ -12,8 +12,7 @@ for (let i = 1; i < 69; i++) {
 deletion(btree, 32);
 deletion(btree, 48);
 deletion(btree, 65);
-console.log("HELLO");
-console.log(JSON.stringify(btree));
 deletion(btree, 31);
+deletion(btree, 16);
 //console.log(btree, btree.children);
 console.log(JSON.stringify(btree));
