@@ -123,15 +123,6 @@ function insert(b_tree, key, value, depth) {
 	return false;
 }
 
-insert(btree, 1, 4230);
-insert(btree, 2, 36);
-insert(btree, 3, 47);
-insert(btree, 4, 816);
-insert(btree, 5, 4230);
-insert(btree, 6, 36);
-insert(btree, 7, 47);
-insert(btree, 8, 816);
-
 function search(b_tree, key) {
 	let key_pos = 0;
 	for (let i = 0; i < b_tree.key.length; i++) { // search through keys and see which child should be traversed to
@@ -185,14 +176,14 @@ function deletion(b_tree, key, depth, gparent) {
 		// special case: deleting, and there's too many children
 		// ^: combine if their numbers are correct
 		let filled_pos = b_tree.children[key_pos + 1] && b_tree.children[key_pos + 1].key.length == 1 ? key_pos + 1 : -1;
-		if (filled_pos == -1) filled_pos = b_tree.children[key_pos - 1] && 
+		if (filled_pos == -1) filled_pos = b_tree.children[key_pos - 1] &&
 			b_tree.children[key_pos - 1].key.length == 1 ? key_pos - 1 : -1;
-		if (b_tree.key.length < b_tree.children.length - 1 && b_tree.children[kill_pos].key.length == 1 && 
+		if (b_tree.key.length < b_tree.children.length - 1 && b_tree.children[kill_pos].key.length == 1 &&
 			filled_pos != -1 && b_tree.children[filled_pos].key.length) {
 			// combine the key_pos child and filled_pos child
 			let filled_key = b_tree.children[filled_pos].key.splice(0, 1)[0];
 			let filled_load = b_tree.children[filled_pos].payload.splice(0, 1)[0];
-			b_tree.children.splice(filled_load, 1);
+			b_tree.children.splice(filled_pos, 1);
 			b_tree.children[key_pos].key.push(filled_key);
 			b_tree.children[key_pos].payload.push(filled_load);
 			quicksort(b_tree.children[key_pos].key, b_tree.children[key_pos].payload, 0, b_tree.children[key_pos].key.length - 1);
@@ -203,6 +194,7 @@ function deletion(b_tree, key, depth, gparent) {
 		new_values = deletion(b_tree.children[key_pos], key, depth + 1, gparent);
 	}
 	// run a quick check on the lengths of the children
+	key_pos = key_pos == b_tree.key.length ? key_pos - 1 : key_pos;
 	let full_children = true;
 	for (let children_check = 0; children_check < b_tree.children.length; children_check++) {
 		if (!b_tree.children[children_check].key.length) {
@@ -211,6 +203,12 @@ function deletion(b_tree, key, depth, gparent) {
 		}
 	}
 	if (full_children) return new_values;
+	if (new_values && b_tree.key[key_pos] == key) { // swap in the value
+		b_tree.key[key_pos] = new_values[0];
+		b_tree.payload[key_pos] = new_values[1];
+		new_values = [];
+	}
+	console.log("\n", key, new_values, "\n");
 	// make a full node and empty node variable to keep track
 	let full_node = b_tree.children[key_pos].key.length ? key_pos : key_pos + 1;
 	let empty_node = !b_tree.children[key_pos].key.length ? key_pos : key_pos + 1;
@@ -222,11 +220,11 @@ function deletion(b_tree, key, depth, gparent) {
 	if (b_tree.children[full_node].key.length > 1) {
 		// first case: one child is empty, other has multiple values
 		// ^: parent goes to empty node, inner vlaue on full node goes to parent
-		parent_key = b_tree.key[empty_node];
-		parent_load = b_tree.payload[empty_node];
-		b_tree.key[empty_node] = full_node > key_pos ? b_tree.children[full_node].key.splice(0, 1)[0] :
+		parent_key = b_tree.key[key_pos];
+		parent_load = b_tree.payload[key_pos];
+		b_tree.key[key_pos] = full_node > key_pos ? b_tree.children[full_node].key.splice(0, 1)[0] :
 			b_tree.children[full_node].key.splice(b_tree.children[full_node].key.length - 1, 1)[0];
-		b_tree.payload[empty_node] = full_node > key_pos ? b_tree.children[full_node].payload.splice(0, 1)[0] :
+		b_tree.payload[key_pos] = full_node > key_pos ? b_tree.children[full_node].payload.splice(0, 1)[0] :
 			b_tree.children[full_node].payload.splice(b_tree.children[full_node].payload.length - 1, 1)[0];
 		b_tree.children[empty_node].key = [parent_key];
 		b_tree.children[empty_node].payload = [parent_load];
@@ -234,21 +232,23 @@ function deletion(b_tree, key, depth, gparent) {
 	} else if (b_tree.children[full_node].key.length == 1) {
 		// second case: one is empty, other has one
 		// ^: parent combines with full nodde as a child, parent left empty, child empty node deleted
-		parent_key = b_tree.key.splice(empty_node, 1);
-		parent_load = b_tree.payload.splice(empty_node, 1);
+		parent_key = b_tree.key.splice(key_pos, 1);
+		parent_load = b_tree.payload.splice(key_pos, 1);
 		b_tree.children[full_node].key = full_node > key_pos ?
-		parent_key.concat(b_tree.children[full_node].key) :
-		[...b_tree.children[full_node].key, ...parent_key];
+			parent_key.concat(b_tree.children[full_node].key) :
+			[...b_tree.children[full_node].key, ...parent_key];
 		b_tree.children[full_node].payload = full_node > key_pos ?
-		parent_load.concat(b_tree.children[full_node].payload) :
-		[...b_tree.children[full_node].payload, ...parent_load];
+			parent_load.concat(b_tree.children[full_node].payload) :
+			[...b_tree.children[full_node].payload, ...parent_load];
 		if (b_tree.children[empty_node].children[0] && b_tree.children[empty_node].children[0].key.length) {
+			let full_children = [...b_tree.children[full_node].children, ...b_tree.children[empty_node].children];
 			b_tree.children[full_node].children = full_node > key_pos ?
-			b_tree.children[empty_node].children.concat(b_tree.children[full_node].children) :
-			[...b_tree.children[full_node].children, ...b_tree.childen[empty_node].children];
+				b_tree.children[empty_node].children.concat(b_tree.children[full_node].children) :
+				full_children;
 		}
 		b_tree.children.splice(empty_node, 1);
 	}
+	console.log(new_values);
 	if (depth == 0 && b_tree.key.length == 0) {
 		// final case: root node and no keys
 		// ^: tak child node and adopt it up into the root
@@ -258,13 +258,6 @@ function deletion(b_tree, key, depth, gparent) {
 	}
 	return new_values;
 }
-
-deletion(btree, 5);
-console.log("one", JSON.stringify(btree));
-deletion(btree, 1);
-console.log("two", JSON.stringify(btree));
-deletion(btree, 7);
-console.log("three", JSON.stringify(btree));
 
 module.exports = {
 	btree,
