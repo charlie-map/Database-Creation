@@ -9,7 +9,7 @@ for (let i = 1; i < 69; i++) {
 	insert(btree, i, Math.round(Math.random() * 420));
 }
 
-for (let i = 68; i > 29; i--) {
+for (let i = 68; i > 0; i--) {
 	console.log(i);
 	if (i != 42 && i != 33 && i != 1 && i!= 3) deletion(btree, i);
 }
