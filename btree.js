@@ -161,7 +161,7 @@ function deletion(b_tree, key, depth, gparent) {
 			key_pos = i;
 			break;
 		}
-		key_pos = b_tree.key[i] < curr_key ? i + 1 : i;
+		key_pos = b_tree.key[i] < curr_key ? i + 1 : key_pos;
 	}
 	let new_values;
 	// check if we should delete
@@ -172,23 +172,48 @@ function deletion(b_tree, key, depth, gparent) {
 		let kill_pos = (gparent && !b_tree.children[key_pos]) ? b_tree.key.length - 1 : key_pos;
 		let key = b_tree.key.splice(kill_pos, 1)[0];
 		let pay = b_tree.payload.splice(kill_pos, 1)[0];
+		console.log("VALUE FOUND", key);
 		if (gparent && !b_tree.children[key_pos]) return [key, pay];
 		// special case: deleting, and there's too many children
 		// ^: combine if their numbers are correct
-		let filled_pos = b_tree.children[key_pos + 1] && b_tree.children[key_pos + 1].key.length == 1 ? key_pos + 1 : -1;
+		console.log("TESTING", b_tree.children, key_pos);
+		let filled_pos = b_tree.children[key_pos + 1] && b_tree.children[key_pos + 1].key.length ? key_pos + 1 : -1;
+		console.log(filled_pos);
 		if (filled_pos == -1) filled_pos = b_tree.children[key_pos - 1] &&
-			b_tree.children[key_pos - 1].key.length == 1 ? key_pos - 1 : -1;
-		if (b_tree.key.length < b_tree.children.length - 1 && b_tree.children[kill_pos].key.length == 1 &&
-			filled_pos != -1 && b_tree.children[filled_pos].key.length) {
-			// combine the key_pos child and filled_pos child
-			let filled_key = b_tree.children[filled_pos].key.splice(0, 1)[0];
-			let filled_load = b_tree.children[filled_pos].payload.splice(0, 1)[0];
-			b_tree.children.splice(filled_pos, 1);
-			b_tree.children[key_pos].key.push(filled_key);
-			b_tree.children[key_pos].payload.push(filled_load);
-			quicksort(b_tree.children[key_pos].key, b_tree.children[key_pos].payload, 0, b_tree.children[key_pos].key.length - 1);
+			b_tree.children[key_pos - 1].key.length ? key_pos - 1 : -1;
+		console.log(filled_pos);
+		if (b_tree.children && b_tree.key.length < b_tree.children.length - 1 && filled_pos != -1) {
+			let filled_key;
+			let filled_load;
+			let check_value = (b_tree.children[kill_pos] && b_tree.children[kill_pos].key.length > 1) ? 1 :
+				b_tree.children[kill_pos + 1] && b_tree.children[kill_pos + 1].key.length > 1 ? 2 : 0;
+			if (check_value) {
+				console.log("CARE");
+				// pull up a child
+				filled_key = check_value == 1 ? b_tree.children[kill_pos].key.splice(b_tree.children[kill_pos].key.length - 1, 1)[0] :
+					b_tree.children[kill_pos + 1].key.splice(0, 1)[0];
+				filled_load = check_value == 1 ? b_tree.children[kill_pos].payload.splice(b_tree.children[kill_pos].payload.length - 1, 1)[0] :
+					b_tree.children[kill_pos + 1].payload.splice(0, 1)[0];
+				b_tree.key.push(filled_key);
+				b_tree.payload.push(filled_load);
+				quicksort(b_tree.key, b_tree.payload, 0, b_tree.key.length - 1);
+			}
+			if (b_tree.children[kill_pos].key.length == 1 && check_value == 0 && b_tree.children[filled_pos]) {
+				filled_key = b_tree.children[filled_pos].key.splice(0, 1)[0];
+				filled_load = b_tree.children[filled_pos].payload.splice(0, 1)[0];
+				b_tree.children.splice(filled_pos, 1);
+				b_tree.children[key_pos].key.push(filled_key);
+				b_tree.children[key_pos].payload.push(filled_load);
+				quicksort(b_tree.children[key_pos].key, b_tree.children[key_pos].payload, 0, b_tree.children[key_pos].key.length - 1);
+				if (depth == 0 && b_tree.key.length == 0) {
+					// final case: root node and no keys
+					// ^: tak child node and adopt it up into the root
+					b_tree.key = b_tree.children[0].key;
+					b_tree.payload = b_tree.children[0].payload;
+					b_tree.children = b_tree.children[0].children;
+				}
+			}
 		}
-		return;
 	} else { // keep searching
 		if (!b_tree.children[key_pos]) return 0;
 		new_values = deletion(b_tree.children[key_pos], key, depth + 1, gparent);
@@ -199,10 +224,10 @@ function deletion(b_tree, key, depth, gparent) {
 		b_tree.payload[key_pos] = new_values[1];
 		new_values = [];
 	}
-	key_pos = key_pos == b_tree.key.length ? key_pos - 1 : key_pos;
+	key_pos = (key_pos == b_tree.key.length && b_tree.key.length != 0) ? key_pos - 1 : key_pos;
 	let full_children = true;
 	for (let children_check = 0; children_check < b_tree.children.length; children_check++) {
-		if (!b_tree.children[children_check].key.length) {
+		if (!b_tree.children[children_check].key.length || b_tree.key.length < b_tree.children.length - 1) {
 			full_children = false;
 			break;
 		}
@@ -212,8 +237,10 @@ function deletion(b_tree, key, depth, gparent) {
 	let full_node = b_tree.children[key_pos].key.length ? key_pos : key_pos + 1;
 	let empty_node = !b_tree.children[key_pos].key.length ? key_pos : key_pos + 1;
 	// since the value may be on the other side, check on the right
+	console.log('current nodes', full_node, empty_node);
 	full_node = b_tree.children[full_node] && b_tree.children[full_node].key.length ? full_node : key_pos - 1;
 	empty_node = b_tree.children[empty_node] && b_tree.children[empty_node].key.length == 0 ? empty_node : key_pos - 1;
+		console.log("\nCURRENT TREE", b_tree, b_tree.children, key_pos, "\nNODE VALUES", full_node, empty_node);
 	let parent_key;
 	let parent_load;
 	if (b_tree.children[full_node].key.length > 1) {
@@ -231,7 +258,7 @@ function deletion(b_tree, key, depth, gparent) {
 			(b_tree.children[full_node].children[b_tree.children[full_node].children.length - 1] && b_tree.children[full_node].children[b_tree.children[full_node].children.length - 1].key.length)) {
 			if (full_node > key_pos) {
 				let child = b_tree.children[full_node].children.splice(0, 1);
-				b_tree.children[empty_node].children.push(child);
+				b_tree.children[empty_node].children = [...b_tree.children[empty_node].children, ...child];
 			} else {
 				let child = b_tree.children[full_node].children.splice(b_tree.children[full_node].children.length - 1, 1);
 				b_tree.children[empty_node].children = [...b_tree.children[empty_node].children.splice(0, full_node),
