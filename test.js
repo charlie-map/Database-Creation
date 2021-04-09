@@ -10,34 +10,11 @@ for (let i = 1; i < 69; i++) {
 }
 
 for (let i = 68; i > 0; i--) {
-	console.log(i);
-	if (i != 42 && i != 33 && i != 1 && i!= 3) deletion(btree, i);
+	if (i != 42 && i != 33 && i != 1 && i!= 3 && i!=8 && i!=16) deletion(btree, i);
 }
 
-// deletion(btree, 32);
-// deletion(btree, 48);
-// deletion(btree, 65);
-// deletion(btree, 31);
-// deletion(btree, 16);
 console.log(check(btree, 0));
 console.log(JSON.stringify(btree));
-
-// insert(btree, 1, 420);
-// insert(btree, 2, 816);
-// insert(btree, 3, 69);
-// insert(btree, 4, 6969);
-// insert(btree, 5, "ass");
-// insert(btree, 6, "butthol");
-// insert(btree, 7, 420);
-// insert(btree, 8, 420);
-// insert(btree, 9, 816);
-// insert(btree, 10, 69);
-// insert(btree, 11, 6969);
-// insert(btree, 12, "ass");
-// insert(btree, 13, "butthol");
-// insert(btree, 14, 420);
-// insert(btree, 15, 585);
-
 
 function isSorted(array) {
 	let last_value = 0;
@@ -77,5 +54,3 @@ function check(b_tree, depth) {
 	}
 	return check_value;
 }
-
-console.log(check(btree, 0));

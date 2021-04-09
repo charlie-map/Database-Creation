@@ -172,23 +172,18 @@ function deletion(b_tree, key, depth, gparent) {
 		let kill_pos = (gparent && !b_tree.children[key_pos]) ? b_tree.key.length - 1 : key_pos;
 		let key = b_tree.key.splice(kill_pos, 1)[0];
 		let pay = b_tree.payload.splice(kill_pos, 1)[0];
-		console.log("VALUE FOUND", key);
 		if (gparent && !b_tree.children[key_pos]) return [key, pay];
 		// special case: deleting, and there's too many children
 		// ^: combine if their numbers are correct
-		console.log("TESTING", b_tree.children, key_pos);
 		let filled_pos = b_tree.children[key_pos + 1] && b_tree.children[key_pos + 1].key.length ? key_pos + 1 : -1;
-		console.log(filled_pos);
 		if (filled_pos == -1) filled_pos = b_tree.children[key_pos - 1] &&
 			b_tree.children[key_pos - 1].key.length ? key_pos - 1 : -1;
-		console.log(filled_pos);
 		if (b_tree.children && b_tree.key.length < b_tree.children.length - 1 && filled_pos != -1) {
 			let filled_key;
 			let filled_load;
 			let check_value = (b_tree.children[kill_pos] && b_tree.children[kill_pos].key.length > 1) ? 1 :
 				b_tree.children[kill_pos + 1] && b_tree.children[kill_pos + 1].key.length > 1 ? 2 : 0;
 			if (check_value) {
-				console.log("CARE");
 				// pull up a child
 				filled_key = check_value == 1 ? b_tree.children[kill_pos].key.splice(b_tree.children[kill_pos].key.length - 1, 1)[0] :
 					b_tree.children[kill_pos + 1].key.splice(0, 1)[0];
@@ -237,10 +232,8 @@ function deletion(b_tree, key, depth, gparent) {
 	let full_node = b_tree.children[key_pos].key.length ? key_pos : key_pos + 1;
 	let empty_node = !b_tree.children[key_pos].key.length ? key_pos : key_pos + 1;
 	// since the value may be on the other side, check on the right
-	console.log('current nodes', full_node, empty_node);
 	full_node = b_tree.children[full_node] && b_tree.children[full_node].key.length ? full_node : key_pos - 1;
 	empty_node = b_tree.children[empty_node] && b_tree.children[empty_node].key.length == 0 ? empty_node : key_pos - 1;
-		console.log("\nCURRENT TREE", b_tree, b_tree.children, key_pos, "\nNODE VALUES", full_node, empty_node);
 	let parent_key;
 	let parent_load;
 	if (b_tree.children[full_node].key.length > 1) {
