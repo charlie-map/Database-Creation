@@ -1,4 +1,4 @@
-const m = 3; // The maximum keys for each node - if the amount hits 3, the tree splits
+const m = 7; // The maximum keys for each node - if the amount hits 3, the tree splits
 
 let btree = { // This will be considered the root node
 	key: [],
@@ -65,9 +65,9 @@ function split_node(b_tree) {
 	let left_keys = b_tree.key.splice(0, parent_pos);
 	let left_payloads = b_tree.payload.splice(0, parent_pos);
 	let left_children = b_tree.children.splice(0, parent_pos + 1);
-	let right_keys = b_tree.key.splice(parent_pos, m - (parent_pos - 1));
-	let right_payloads = b_tree.payload.splice(parent_pos, m - (parent_pos - 1));
-	let right_children = b_tree.children.splice(parent_pos - 1, m - (parent_pos - 1));
+	let right_keys = b_tree.key.splice(1, m - (parent_pos - 1));
+	let right_payloads = b_tree.payload.splice(1, m - (parent_pos - 1));
+	let right_children = b_tree.children.splice(1 - 1, m - (parent_pos - 1));
 	b_tree.key = [parent_key];
 	b_tree.payload = [parent_payload];
 	b_tree.children[0] = {
@@ -120,6 +120,10 @@ function insert(b_tree, key, value) {
 		return true;
 	}
 	return false;
+}
+
+for (let i = 1; i < 32; i++) {
+	insert(btree, i, 0);
 }
 
 function search(b_tree, key) {
