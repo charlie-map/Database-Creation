@@ -1,4 +1,4 @@
-const m = 7; // The maximum keys for each node - if the amount hits 3, the tree splits
+const m = 5; // The maximum keys for each node - if the amount hits m, the tree splits
 
 let btree = { // This will be considered the root node
 	key: [],
@@ -122,10 +122,6 @@ function insert(b_tree, key, value) {
 	return false;
 }
 
-for (let i = 1; i < 32; i++) {
-	insert(btree, i, 0);
-}
-
 function search(b_tree, key) {
 	let key_pos = 0;
 	for (let i = 0; i < b_tree.key.length; i++) { // search through keys and see which child should be traversed to
@@ -166,6 +162,7 @@ function deletion(b_tree, key, depth, gparent) {
 		}
 		key_pos = b_tree.key[i] < curr_key ? i + 1 : key_pos;
 	}
+	console.log(b_tree, key_pos, key);
 	let new_values;
 	// check if we should delete
 	if (b_tree.key[key_pos] == curr_key && b_tree.children[key_pos] && b_tree.children[key_pos].children.length) {
@@ -235,23 +232,23 @@ function deletion(b_tree, key, depth, gparent) {
 	console.log(full_children);
 	if (full_children) return new_values;
 	// make a full node and empty node variable to keep track
-	let full_node = b_tree.children[key_pos].key.length ? key_pos : key_pos + 1;
+	let full_node = b_tree.children[key_pos].key.length >= Math.floor(m / 2) ? key_pos : key_pos + 1;
 	// since the value may be on the other side, check on the right
-	full_node = b_tree.children[full_node] && b_tree.children[full_node].key.length ? full_node : key_pos - 1;
+	full_node = b_tree.children[full_node] && b_tree.children[full_node].key.length >= Math.floor(m / 2) ? full_node : key_pos - 1;
+	full_node = b_tree.children[key_pos - 1] && b_tree.children[full_node].key.length < b_tree.children[key_pos - 1].key.length ? key_pos - 1 : full_node;
 	let parent_key;
 	let parent_load;
-	console.log("\nTEST", b_tree, b_tree.children, full_node);
 	if (b_tree.children[full_node].key.length > Math.floor(m / 2)) {
-		// first case: one child is empty, other has multiple values
+		console.log("\n\ngrab friend value", depth, b_tree, b_tree.children);
 		// ^: parent goes to empty node, inner vlaue on full node goes to parent
-		parent_key = b_tree.key[key_pos];
-		parent_load = b_tree.payload[key_pos];
-		b_tree.key[key_pos] = full_node > key_pos ? b_tree.children[full_node].key.splice(0, 1)[0] :
+		parent_key = b_tree.key[full_node];
+		parent_load = b_tree.payload[full_node];
+		b_tree.key[full_node] = full_node > key_pos ? b_tree.children[full_node].key.splice(0, 1)[0] :
 			b_tree.children[full_node].key.splice(b_tree.children[full_node].key.length - 1, 1)[0];
-		b_tree.payload[key_pos] = full_node > key_pos ? b_tree.children[full_node].payload.splice(0, 1)[0] :
+		b_tree.payload[full_node] = full_node > key_pos ? b_tree.children[full_node].payload.splice(0, 1)[0] :
 			b_tree.children[full_node].payload.splice(b_tree.children[full_node].payload.length - 1, 1)[0];
-		b_tree.children[empty_node].key = [parent_key];
-		b_tree.children[empty_node].payload = [parent_load];
+		b_tree.children[empty_node].key = [parent_key].concat(b_tree.children[empty_node].key);
+		b_tree.children[empty_node].payload = [parent_load].concat(b_tree.children[empty_node].payload);
 		if ((b_tree.children[full_node].children[0] && b_tree.children[full_node].children[0].key.length) ||
 			(b_tree.children[full_node].children[b_tree.children[full_node].children.length - 1] && b_tree.children[full_node].children[b_tree.children[full_node].children.length - 1].key.length)) {
 			if (full_node > key_pos) {
@@ -290,10 +287,6 @@ function deletion(b_tree, key, depth, gparent) {
 	}
 	return new_values;
 }
-
-deletion(btree, 16);
-
-console.log(JSON.stringify(btree));
 
 module.exports = {
 	btree,
