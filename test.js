@@ -5,16 +5,40 @@ const {
 	deletion
 } = require("./btree.js");
 
-for (let i = 1; i < 69; i++) {
-	insert(btree, i, Math.round(Math.random() * 420));
+let cute_boy = [];
+
+for (let i = 0; i < 69; i++) {
+	cute_boy[i] = [i, Math.floor(Math.random() * 420)];
 }
 
-for (let i = 68; i > 0; i--) {
-	if (i != 42 && i != 33 && i != 1 && i!= 3 && i!=8 && i!=16) deletion(btree, i);
+/* Randomize array in-place using Durstenfeld shuffle algorithm */
+function shuffle(array) {
+    for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+}
+
+shuffle(cute_boy);
+
+for (let i = 0; i < cute_boy.length; i++) {
+	insert(btree, cute_boy[i][0], cute_boy[i][1]);
 }
 
 console.log(check(btree, 0));
 console.log(JSON.stringify(btree));
+
+for (let i = 1; i < 69; i++) {
+	if (i != 42 && i != 33 && i != 1 && i!= 3 && i!=8 && i!=16 && i!=26 && i!=67) deletion(btree, i);
+}
+
+console.log("\n\nAAHH", JSON.stringify(btree));
+
+deletion(btree, 16);
+
+console.log("\n\nAHH HARDER", JSON.stringify(btree));
 
 function isSorted(array) {
 	let last_value = 0;

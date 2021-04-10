@@ -83,15 +83,14 @@ function split_node(b_tree) {
 	return;
 }
 
-function insert(b_tree, key, value, depth) {
-	depth = !depth ? 0 : depth;
+function insert(b_tree, key, value) {
 	let key_pos = 0;
 	let combine_compare = false; // Knowing if there is a need to combine the child up in the parent
 	for (let run_through = 0; run_through < b_tree.key.length; run_through++) {
 		if (key > b_tree.key[run_through]) key_pos++;
 	}
 	if (b_tree.children && b_tree.children[key_pos]) {
-		combine_compare = insert(b_tree.children[key_pos], key, value, depth + 1);
+		combine_compare = insert(b_tree.children[key_pos], key, value);
 	} else {
 		// insert here and start fixing the tree upward
 		b_tree.key.push(key);
@@ -193,7 +192,7 @@ function deletion(b_tree, key, depth, gparent) {
 				b_tree.payload.push(filled_load);
 				quicksort(b_tree.key, b_tree.payload, 0, b_tree.key.length - 1);
 			}
-			if (b_tree.children[kill_pos].key.length == 1 && check_value == 0 && b_tree.children[filled_pos]) {
+			if (b_tree.children[kill_pos].key.length == Math.floor(m / 2) && check_value == 0 && b_tree.children[filled_pos]) {
 				filled_key = b_tree.children[filled_pos].key.splice(0, 1)[0];
 				filled_load = b_tree.children[filled_pos].payload.splice(0, 1)[0];
 				b_tree.children.splice(filled_pos, 1);
@@ -236,7 +235,7 @@ function deletion(b_tree, key, depth, gparent) {
 	empty_node = b_tree.children[empty_node] && b_tree.children[empty_node].key.length == 0 ? empty_node : key_pos - 1;
 	let parent_key;
 	let parent_load;
-	if (b_tree.children[full_node].key.length > 1) {
+	if (b_tree.children[full_node].key.length > Math.floor(m / 2)) {
 		// first case: one child is empty, other has multiple values
 		// ^: parent goes to empty node, inner vlaue on full node goes to parent
 		parent_key = b_tree.key[key_pos];
@@ -260,7 +259,7 @@ function deletion(b_tree, key, depth, gparent) {
 				];
 			}
 		}
-	} else if (b_tree.children[full_node].key.length == 1) {
+	} else if (b_tree.children[full_node].key.length == Math.flor(m / 2)) {
 		// second case: one is empty, other has one
 		// ^: parent combines with full nodde as a child, parent left empty, child empty node deleted
 		parent_key = b_tree.key.splice(key_pos, 1);
@@ -281,7 +280,7 @@ function deletion(b_tree, key, depth, gparent) {
 	}
 	if (depth == 0 && b_tree.key.length == 0) {
 		// final case: root node and no keys
-		// ^: tak child node and adopt it up into the root
+		// ^: take child node and adopt it up into the root
 		b_tree.key = b_tree.children[0].key;
 		b_tree.payload = b_tree.children[0].payload;
 		b_tree.children = b_tree.children[0].children;
